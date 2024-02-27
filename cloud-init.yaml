@@ -1,0 +1,71 @@
+#cloud-config
+version: v1
+write_files:
+  - path: /tmp/install_ruby.sh
+    content: |
+      #!/bin/bash
+
+      sudo touch /tmp/log_deploy.log && chmod 0777 /tmp/log_deploy.log
+      sudo apt update && sudo apt install -y ruby-full ruby-bundler build-essential;
+      ruby -v
+      if [ $? -eq 0 ]; then
+      echo "Ruby was installed" >> /tmp/log_deploy.log
+      else "WARN: Ruby wasn't installed" >> /tmp/log_deploy.log exit 1;
+      fi
+      bundler -v
+      if [ $? -eq 0 ]; then
+      echo "Bundler was installed" >> /tmp/log_deploy.log
+      else echo "WARN: Bundler wasn't installed" >> /tmp/log_deploy.log exit 1;
+      fi
+      exit 0;
+
+    permissions: '0755'
+
+  - path: /tmp/install_mongodb.sh
+    content: |
+      #!/bin/bash
+
+      wget -qO - https://www.mongodb.org/static/pgp/server-4.2.asc | sudo apt-key add -
+      echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.2.list
+      sudo apt update; sudo apt-get install -y mongodb-org && sudo systemctl start mongod
+      if [ $? -eq 0 ]; then
+      echo "MongoDB was installed" >> /tmp/log_deploy.log; sudo systemctl start mongod
+      else echo "WARN: MongoDB wasn't installed" >> /tmp/log_deploy.log exit 1; fi
+      exit 0;
+
+    permissions: '0755'
+
+  - path: /tmp/deploy.sh
+    content: |
+      #!/bin/bash
+
+      sudo apt-get install -y git && rm -rf $DEPLOY_PATH
+      cd /home/appuser && git clone -b monolith https://github.com/express42/reddit.git
+      if [ -d /home/appuser/reddit ]; then
+      echo "Repo monolith was cloned" >> /tmp/log_deploy.log
+      else echo "WARN: Repo monolith wasn't cloned" >> /tmp/log_deploy.log exit 1;
+      fi
+      cd /home/appuser/reddit && bundle install && sudo puma -d > /tmp/puma_out.err
+      cat /tmp/puma_out.err | grep "Puma starting in single mode..."
+      if [ $? -eq 0 ]; then
+      echo "Puma is UP and running" >> /tmp/log_deploy.log
+      else echo "WARN: Puma wasn't started" >> /tmp/log_deploy.log exit 1;
+      fi
+      exit 0;
+
+    permissions: '0755'
+
+users:
+  - default
+  - name: appuser
+    groups: sudo, adm
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    lock_passwd: false
+    ssh_authorized_keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEDFwXTtQpEsmmQPB/ZecVunSBu+F/QZ8F2em0DN5sar"
+
+runcmd:
+  - [ sh, "/tmp/install_ruby.sh" ]
+  - [ sh, "/tmp/install_mongodb.sh" ]
+  - [ sh, "/tmp/deploy.sh" ]
