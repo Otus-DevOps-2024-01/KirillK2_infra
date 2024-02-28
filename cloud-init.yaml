@@ -39,7 +39,7 @@ write_files:
     content: |
       #!/bin/bash
 
-      sudo apt-get install -y git && rm -rf $DEPLOY_PATH
+      sudo apt-get install -y git && rm -rf /home/appuser/reddit
       cd /home/appuser && git clone -b monolith https://github.com/express42/reddit.git
       if [ -d /home/appuser/reddit ]; then
       echo "Repo monolith was cloned" >> /tmp/log_deploy.log

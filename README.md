@@ -49,3 +49,22 @@ ssh -J appuser@<bastion_IP> appuser@<someinternalhost_IP>
         IdentityFile ~/.ssh/id_ed25519
         Proxyjump bastion
 ```
+# Deploy app reddit
+
+testapp_IP = 158.160.113.66
+testapp_port = 9292
+
+1. Команда для создания инстанса в Cloud yandex
+
+```
+yc compute instance create \
+  --name reddit-app \
+  --hostname reddit-app \
+  --memory=4 \
+  --create-boot-disk image-folder-id=standard-images,image-family=ubuntu-1604-lts,size=8GB \
+  --network-interface subnet-name=default-ru-central1-a,nat-ip-version=ipv4 \
+  --metadata serial-port-enable=1 \
+  --metadata-from-file='user-data=./cloud-init.yaml'
+```
+
+2. cloud.init.yaml создает пользователя appuser и последовательно выполняет скрипты: install_ruby.sh, install_mongodb.sh, deploy.sh.
