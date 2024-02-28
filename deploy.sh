@@ -1,7 +1,7 @@
 #!/bin/bash
-export DEPLOY_PATH='/home/yc-user/reddit'
+export DEPLOY_PATH='/home/appuser/reddit'
 sudo apt-get install -y git && rm -rf $DEPLOY_PATH
-cd /home/yc-user && git clone -b monolith https://github.com/express42/reddit.git
+cd /home/appuser && git clone -b monolith https://github.com/express42/reddit.git
 if [ -d $DEPLOY_PATH ]; then
 echo "Repo monolith was cloned" >> /tmp/log_deploy.log
 else echo "WARN: Repo monolith wasn't cloned" >> /tmp/log_deploy.log exit 1;
