@@ -1,0 +1,5 @@
+{
+    "folder_id": "differentsymbols",
+    "service_account_key_file": "scripts/key.json",
+    "source_image_family": "ubuntu-1604-lts"
+  }

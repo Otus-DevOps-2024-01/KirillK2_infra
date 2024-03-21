@@ -68,3 +68,57 @@ yc compute instance create \
 ```
 
 2. cloud.init.yaml создает пользователя appuser и последовательно выполняет скрипты: install_ruby.sh, install_mongodb.sh, deploy.sh.
+
+
+# Packer
+
+1. Создал сервисный акаунт 'packer-service' для работы с образами в yandex-cloud.
+2. Делегировал роль сервисному акаунту 'editor'.
+3. Создал account key file для сервисного акаунта, файл в json формате.
+4. Создал файл 'ubuntu16.json' для сборки образа в секции 'builders' и
+поместил скрипты в секцию 'provisioners' для подготовки тестового приложения:
+
+```
+{
+    "builders": [
+        {
+            "type": "yandex",
+            "service_account_key_file": "{{user `service_account_key_file`}}",
+            "folder_id": "{{user `folder_id`}}",
+            "source_image_family": "{{user `source_image_family`}}",
+            "image_name": "reddit-base-{{timestamp}}",
+            "image_family": "reddit-base",
+            "ssh_username": "ubuntu",
+            "platform_id": "standard-v1",
+            "use_ipv4_nat": "true"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "script": "scripts/install_ruby.sh",
+            "execute_command": "sudo {{.Path}}"
+        },
+        {
+            "type": "shell",
+            "script": "scripts/install_mongodb.sh",
+            "execute_command": "sudo {{.Path}}"
+        }
+    ]
+}
+```
+5. Вынес пользовательские переменные(folder_id,service_account_key_file,source_image_family) во внешний файл variables.json
+
+```
+{
+    "folder_id": "differentsymbols",
+    "service_account_key_file": "/home/your_user/vault_dir/packer/service_account_key.json",
+    "source_image_family": "ubuntu-1604-lts"
+  }
+
+```
+
+6. Проверил файл сборки образа на ошибки: ```packer validate ./ubuntu16.json```
+7. Запустил сборку образа: ```packer build -var-file=variables.json ubuntu16.json```
+8. Проверил вывод в консоли и ошибки.
+9. Создал виртуальную машину на основе подготовленного образа из пунтка 8.
