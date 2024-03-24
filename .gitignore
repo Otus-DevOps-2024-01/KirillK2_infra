@@ -1,2 +1,6 @@
-variables.json
-add_user.sh
+*.tfstate
+*.tfstate.*.backup
+*.tfstate.backup
+*.tfvars
+.terraform/
+packer/variables.json
