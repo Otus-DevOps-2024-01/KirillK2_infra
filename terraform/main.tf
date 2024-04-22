@@ -9,6 +9,7 @@ terraform {
 }
 
 provider "yandex" {
+  # token = var.token
   service_account_key_file = var.service_account_key_file
   cloud_id                 = var.cloud_id
   folder_id                = var.folder_id
@@ -17,6 +18,7 @@ provider "yandex" {
 
 resource "yandex_compute_instance" "app" {
   name = "reddit-app"
+  zone = var.zone_instance
   resources {
     cores  = 2
     memory = 2
@@ -37,7 +39,6 @@ resource "yandex_compute_instance" "app" {
 
   metadata = {
     ssh-keys = "ubuntu:${file(var.public_key_path)}"
-    # ssh-keys = "ubuntu:${file("~/.ssh/id_ed25519.pub")}"
   }
 
   connection {
