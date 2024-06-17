@@ -1,24 +1,35 @@
-
 terraform {
   required_providers {
     yandex = {
-      source = "yandex-cloud/yandex"
+      source  = "yandex-cloud/yandex"
+      version = "0.109.0"
     }
   }
   required_version = ">= 0.13"
 }
 
 provider "yandex" {
-  # token = var.token
   service_account_key_file = var.service_account_key_file
   cloud_id                 = var.cloud_id
   folder_id                = var.folder_id
   zone                     = var.zone
 }
 
+resource "yandex_vpc_address" "app_vpc" {
+  count = var.reddit_instance_count
+
+  name = "app-${count.index}"
+
+  external_ipv4_address {
+    zone_id = var.zone
+  }
+}
+
 resource "yandex_compute_instance" "app" {
-  name = "reddit-app"
-  zone = var.zone_instance
+  count = var.reddit_instance_count
+  name  = "reddit-app-${count.index}"
+
+  zone = var.zone
   resources {
     cores  = 2
     memory = 2
@@ -26,12 +37,14 @@ resource "yandex_compute_instance" "app" {
 
   boot_disk {
     initialize_params {
-      #image id from yandex cloud
       image_id = var.image_id
+      name     = "reddit-${count.index}-boot"
+      size     = 10
     }
   }
 
   network_interface {
+    nat_ip_address = yandex_vpc_address.app_vpc[count.index].external_ipv4_address[0].address
     #defautl id subnet for ru-central1-a
     subnet_id = var.subnet_id
     nat       = true
@@ -43,10 +56,10 @@ resource "yandex_compute_instance" "app" {
 
   connection {
     type        = "ssh"
-    host        = yandex_compute_instance.app.network_interface.0.nat_ip_address
+    host        = yandex_vpc_address.app_vpc[count.index].external_ipv4_address[0].address
     user        = "ubuntu"
     agent       = false
-    private_key = file("~/.ssh/id_ed25519")
+    private_key = file(var.private_key_path)
   }
 
   provisioner "file" {
@@ -57,5 +70,4 @@ resource "yandex_compute_instance" "app" {
   provisioner "remote-exec" {
     script = "files/deploy.sh"
   }
-
 }

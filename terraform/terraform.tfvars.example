@@ -5,3 +5,4 @@ image_id = "fd8mmtvlncqsvkhto5s6"
 public_key_path = "~/.ssh/id_rsa.pub"
 subnet_id = "e9bem33uhju28r5i7pnu"
 service_account_key_file = "/home/user/terraform/key.json"
+reddit_instance_count = 1

@@ -1,51 +1,33 @@
-
-resource "yandex_compute_instance" "lb" {
-  name = "loadbalance"
-  zone = var.zone_instance
-  resources {
-    cores  = 2
-    memory = 2
-  }
-
-  boot_disk {
-    initialize_params {
-      image_id = var.image_id
+resource "yandex_lb_network_load_balancer" "reddit_blnsr" {
+  name = "reddit-blnsr"
+  listener {
+    name = "reddit-blnsr"
+    port = 9292
+    external_address_spec {
+      ip_version = "ipv4"
     }
   }
+  attached_target_group {
 
-  network_interface {
-    subnet_id = var.subnet_id
-    nat       = true
+    target_group_id = yandex_lb_target_group.app.id
+    healthcheck {
+      name = "alb-check"
+      http_options {
+        port = 9292
+        path = "/"
+      }
+    }
   }
+}
 
-  metadata = {
-    ssh-keys = "ubuntu:${file(var.public_key_path)}"
+resource "yandex_lb_target_group" "app" {
+  name = "reddit-target"
+  dynamic "target" {
+    for_each = range(var.reddit_instance_count)
+    iterator = counter
+    content {
+      subnet_id = var.subnet_id
+      address   = yandex_compute_instance.app[counter.key].network_interface[0].ip_address
+    }
   }
-
-  connection {
-    type        = "ssh"
-    host        = yandex_compute_instance.lb.network_interface.0.nat_ip_address
-    user        = "ubuntu"
-    agent       = false
-    private_key = file(var.private_key_path)
-  }
-
-  provisioner "local-exec" {
-    command = "bash files/get_public_ip.sh"
-  }
-
-  provisioner "file" {
-    source      = "/tmp/lb_host.local"
-    destination = "/tmp/lb_host.txt"
-  }
-
-  provisioner "file" {
-    source      = "/tmp/app_host.local"
-    destination = "/tmp/app_host.txt"
-  }
-  # terraform goes loop mode and doesn't complete this part
-  #   provisioner "remote-exec" {
-  #     script = "files/deploy-lb.sh"
-  #   }
-
 }
