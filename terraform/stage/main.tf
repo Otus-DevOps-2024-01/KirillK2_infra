@@ -28,7 +28,7 @@ module "db" {
   subnet_id       = var.subnet_id
 }
 
-module "backend" {
-  source = "../modules/backend"
-  public_key_path = var.public_key_path
-}
+# module "backend" {
+#   source = "../modules/backend"
+#   public_key_path = var.public_key_path
+# }
