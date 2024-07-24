@@ -7,6 +7,25 @@
 #   required_version = ">= 0.13"
 # }
 
+variable "cloud_id" {
+  type        = string
+  description = "yandex cloud ID"
+}
+variable "folder_id" {
+  type        = string
+  description = "yandex cloud folder ID"
+}
+variable "zone" {
+  type        = string
+  description = "Default zone"
+  default     = "ru-central1-a"
+}
+
+variable "service_account_key_file" {
+  type        = string
+  description = "Full path to json key file"
+}
+
 provider "yandex" {
   service_account_key_file = var.service_account_key_file
   cloud_id                 = var.cloud_id
