@@ -31,6 +31,14 @@ variable "service_account_key_file" {
   type        = string
   description = "Full path to json key file"
 }
-variable "reddit_instance_count" {
-  type = number
+# variable "reddit_instance_count" {
+#   type = number
+# }
+variable "app_disk_image" {
+  description = "Disk image for reddit app"
+  default     = "reddit-app-base"
+}
+variable "db_disk_image" {
+  description = "Disk image for reddit db"
+  default     = "reddit-db-base"
 }

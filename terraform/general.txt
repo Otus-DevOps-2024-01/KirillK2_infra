@@ -1,12 +1,12 @@
-# terraform {
-#   required_providers {
-#     yandex = {
-#       source  = "yandex-cloud/yandex"
-#       version = "0.109.0"
-#     }
-#   }
-#   required_version = ">= 0.13"
-# }
+terraform {
+  required_providers {
+    yandex = {
+      source  = "yandex-cloud/yandex"
+      version = "0.109.0"
+    }
+  }
+  required_version = ">= 0.13"
+}
 
 provider "yandex" {
   service_account_key_file = var.service_account_key_file
@@ -23,6 +23,17 @@ resource "yandex_vpc_address" "app_vpc" {
   external_ipv4_address {
     zone_id = var.zone
   }
+}
+
+resource "yandex_vpc_network" "app-network" {
+  name = "reddit-app-network"
+}
+
+resource "yandex_vpc_subnet" "app-subnet" {
+  name           = "reddit-app-subnet"
+  zone           = "ru-central1-a"
+  network_id     = yandex_vpc_network.app-network.id
+  v4_cidr_blocks = ["192.168.10.0/24"]
 }
 
 resource "yandex_compute_instance" "app" {
@@ -43,10 +54,15 @@ resource "yandex_compute_instance" "app" {
     }
   }
 
+  # network_interface {
+  #   nat_ip_address = yandex_vpc_address.app_vpc[count.index].external_ipv4_address[0].address
+  #   #defautl id subnet for ru-central1-a
+  #   subnet_id = var.subnet_id
+  #   nat       = true
+  # }
+
   network_interface {
-    nat_ip_address = yandex_vpc_address.app_vpc[count.index].external_ipv4_address[0].address
-    #defautl id subnet for ru-central1-a
-    subnet_id = var.subnet_id
+    subnet_id = yandex_vpc_subnet.app-subnet.id
     nat       = true
   }
 
