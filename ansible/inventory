@@ -1,0 +1,9 @@
+# appserver ansible_host=89.169.141.220 ansible_user=ubuntu ansible_private_key_file=~/.ssh/id_ed25519
+# dbserver ansible_host=89.169.135.199 ansible_user=ubuntu ansible_private_key_file=~/.ssh/id_ed25519
+# appserver ansible_host=89.169.141.220
+# dbserver ansible_host=89.169.135.199
+[app]
+appserver ansible_host=51.250.11.67
+
+[db]
+dbserver ansible_host=89.169.134.104
